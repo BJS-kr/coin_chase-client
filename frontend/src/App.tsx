@@ -1,32 +1,40 @@
-import {useState} from 'react';
-import logo from './assets/images/logo-universal.png';
-import './App.css';
-import {Greet} from "../wailsjs/go/main/App";
-import { SendStatus } from './commuicate';
-const _15Hz = 1000 / 15;
+import { useState } from "react";
+import logo from "./assets/images/logo-universal.png";
+import "./App.css";
+import { SetId } from "./communicate";
 
 function App() {
-    const [resultText, setResultText] = useState("Please enter your name below 👇");
-    const [name, setName] = useState('');
-    const [status, setStatus] = useState({id: 0, x:0, y:0, items:[]} as any); // [id, x, y, items
-    const updateName = (e: any) => setName(e.target.value);
-    const updateResultText = (result: string) => setResultText(result);
+  const [loginText, setLoginText] = useState("아이디를 입력해주세요 👇");
+  const [_, setId] = useState("");
+  const updateId = (e: any) => setId(e.target.value);
 
-    function greet() {
-        Greet(name).then(updateResultText);
-    }
-    setInterval(() => SendStatus({id: 1, x:0, y:3, items:[]}), _15Hz)
-
-    return (
-        <div id="App">
-            <img src={logo} id="logo" alt="logo"/>
-            <div id="result" className="result">{resultText}</div>
-            <div id="input" className="input-box">
-                <input id="name" className="input" onChange={updateName} autoComplete="off" name="input" type="text"/>
-                <button className="btn" onClick={greet}>Greet</button>
-            </div>
-        </div>
-    )
+  return (
+    <div id="App">
+      <img src={logo} id="logo" alt="logo" />
+      <div id="login" className="login">
+        {loginText}
+      </div>
+      <div id="input" className="input-box">
+        <input
+          id="name"
+          className="input"
+          onChange={updateId}
+          autoComplete="off"
+          name="input"
+          type="text"
+        />
+        <button
+          className="btn"
+          onClick={(e) => {
+            SetId(e.currentTarget.value);
+            setLoginText(`환영합니다 ${e.currentTarget.value} 님!`);
+          }}
+        >
+          Log-in
+        </button>
+      </div>
+    </div>
+  );
 }
 
-export default App
+export default App;

@@ -18,6 +18,8 @@ const (
 	SERVER_IP string = "127.0.0.1"
 	SERVER_PORT int = 8888
 )
+
+var userId string
 type ClientStatus struct {
 	Id    int32
 	X     int32
@@ -46,7 +48,14 @@ func (a *App) Greet(name string) string {
 	return fmt.Sprintf("Hello %s, It's show time!", name)
 }
 
-// 사실
+func (a *App) SetId(id string) {
+	userId = id
+}
+
+func (a *App) GetId()string {
+	return userId
+}
+
 func (a *App) LogIn(userId string) int {
 		// 아무 빈 포트에 할당한다.
 		addr, err := net.ResolveUDPAddr("udp", ":0")
