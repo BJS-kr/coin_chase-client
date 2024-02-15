@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"log"
 	"log/slog"
 	"net"
 	"net/http"
@@ -20,11 +21,22 @@ const (
 )
 
 var userId string
+var conn *net.UDPConn
+var globalGameMap *protodef.UserPositionedGameMap
+
+type Item struct {
+	Id string
+	Name string
+	Amount int32
+}
+type Position struct {
+	X int32
+	Y int32
+}
 type ClientStatus struct {
-	Id    int32
-	X     int32
-	Y     int32
-	Items []int32
+	ID    string
+	CurrentPosition *Position
+	Items []*Item
 }
 
 // App struct
@@ -51,7 +63,15 @@ func (a *App) Greet(name string) string {
 func (a *App) SetId(id string) {
 	userId = id
 }
-
+func (a *App) SetConn(udpConn *net.UDPConn) {
+	conn = udpConn
+}
+func (a *App) SetGameMap(gameMap *protodef.UserPositionedGameMap) {
+	globalGameMap=gameMap
+}
+func (a *App) GetGameMap() *protodef.UserPositionedGameMap {
+	return globalGameMap
+}
 func (a *App) GetId()string {
 	return userId
 }
@@ -114,15 +134,52 @@ func (a *App) LogIn(userId string) int {
 			panic(err)
 		}
 
+		a.SetId(userId)
+		a.SetConn(conn)
+
 		return port
 }
 
+func (a *App) StartUpdateMapStatus() {
+	go func() {
+		for {
+			buffer := make([]byte, 1024)
+			amount, _, err := conn.ReadFromUDP(buffer)
+
+			if err != nil {
+				log.Fatal(err.Error())
+			}
+
+			userPositionedGameMap := &protodef.UserPositionedGameMap{}
+			desErr := proto.Unmarshal(buffer[:amount], userPositionedGameMap)
+
+			if desErr != nil {
+				log.Fatal(err.Error())
+			}
+
+			a.SetGameMap(userPositionedGameMap)
+	}
+	}()
+}
+
 func (a *App) SendStatus(clientStatus ClientStatus) {
+	protoItems := make([]*protodef.Item, 0)
+
+	for _, item := range clientStatus.Items {
+		protoItems = append(protoItems, &protodef.Item{
+			Id: item.Id,
+			Name: item.Name,
+			Amount: item.Amount,
+		})
+	}
+
 	status := protodef.Status{
-		Id:     clientStatus.Id,
-		X:      clientStatus.X,
-		Y:      clientStatus.Y,
-		Items:  clientStatus.Items,
+		Id:     clientStatus.ID,
+		CurrentPosition: &protodef.Position{
+			X: clientStatus.CurrentPosition.X,
+			Y: clientStatus.CurrentPosition.Y,
+		},
+		Items:  protoItems,
 		SentAt: timestamppb.New(time.Now()),
 	}
 
@@ -147,12 +204,12 @@ func (a *App) SendStatus(clientStatus ClientStatus) {
 		panic(err)
 	}
 
-	result, err := server.Write(data)
+	_, err = server.Write(data)
 
 	if err != nil {
 		slog.Debug(err.Error())
 		panic(err)
 	}
 
-	slog.Debug(fmt.Sprintf("%d", result))
+	
 }

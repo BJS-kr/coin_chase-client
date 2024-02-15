@@ -4,11 +4,14 @@ function func(name: string) {
   return App[name];
 }
 export const SendStatus = (status: {
-  id: number;
-  x: number;
-  y: number;
-  items: number[];
+  id: string;
+  currentPosition: {
+    x: number;
+    y: number;
+  };
+  items: { id: string; name: string; amount: string }[];
 }) => func("SendStatus")(status);
 
-export const SetId = (id: string) => func("SetId")(id);
-export const GetId = () => func("GetId")();
+export const LogIn = (id: string) => func("LogIn")(id);
+export const GetId = (): string => func("GetId")();
+export const StartUpdateMapStatus = () => func("StartUpdateMapStatus")();
