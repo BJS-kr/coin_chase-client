@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { LogIn, StartUpdateMapStatus } from "../communicate";
+import { LogIn, SetServerPort, StartUpdateMapStatus } from "../communicate";
 import { Navigate, useNavigate } from "react-router-dom";
 import logo from "../assets/images/logo-universal.png";
 
@@ -26,9 +26,9 @@ export const Home = () => {
         />
         <button
           className="btn"
-          onClick={() => {
-            LogIn(id);
-            StartUpdateMapStatus();
+          onClick={async() => {
+            await SetServerPort(await LogIn(id));
+            await StartUpdateMapStatus();
             navigate("/game");
           }}
         >

@@ -15,18 +15,20 @@ import (
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
+
 const (
-	SERVER_IP string = "127.0.0.1"
-	SERVER_PORT int = 8888
+	SERVER_IP         string = "127.0.0.1"
+	SERVER_LOGIN_PORT int    = 8888
 )
 
+var serverPort int
 var userId string
 var conn *net.UDPConn
 var globalGameMap *protodef.UserPositionedGameMap
 
 type Item struct {
-	Id string
-	Name string
+	Id     string
+	Name   string
 	Amount int32
 }
 type Position struct {
@@ -34,9 +36,9 @@ type Position struct {
 	Y int32
 }
 type ClientStatus struct {
-	ID    string
+	ID              string
 	CurrentPosition *Position
-	Items []*Item
+	Items           []*Item
 }
 
 // App struct
@@ -67,77 +69,80 @@ func (a *App) SetConn(udpConn *net.UDPConn) {
 	conn = udpConn
 }
 func (a *App) SetGameMap(gameMap *protodef.UserPositionedGameMap) {
-	globalGameMap=gameMap
+	globalGameMap = gameMap
 }
 func (a *App) GetGameMap() *protodef.UserPositionedGameMap {
 	return globalGameMap
 }
-func (a *App) GetId()string {
+func (a *App) GetId() string {
 	return userId
+}
+func (a *App) SetServerPort(port int) {
+	serverPort = port
 }
 
 func (a *App) LogIn(userId string) int {
-		// 아무 빈 포트에 할당한다.
-		addr, err := net.ResolveUDPAddr("udp", ":0")
-	
-		if err != nil {
-			slog.Debug(err.Error())
-			panic(err)
-		}
-	
-		conn, err := net.ListenUDP("udp", addr)
-	
-		if err != nil {
-			slog.Debug(err.Error())
-			panic(err)
-		}
+	// 아무 빈 포트에 할당한다.
+	addr, err := net.ResolveUDPAddr("udp", ":0")
 
-		resp, err := http.Get("https://ipinfo.io/ip")
+	if err != nil {
+		slog.Debug(err.Error())
+		panic(err)
+	}
 
-		if err != nil {
-			slog.Debug(err.Error())
-			panic(err)
-		}
+	conn, err := net.ListenUDP("udp", addr)
 
-		defer resp.Body.Close()
+	if err != nil {
+		slog.Debug(err.Error())
+		panic(err)
+	}
 
-		byteIp, err := io.ReadAll(resp.Body)
+	resp, err := http.Get("https://ipinfo.io/ip")
 
-		if err != nil {
-			slog.Debug(err.Error())
-			panic(err)
-		}
+	if err != nil {
+		slog.Debug(err.Error())
+		panic(err)
+	}
 
-		ip := string(byteIp)
-		clientPort := conn.LocalAddr().(*net.UDPAddr).Port
+	defer resp.Body.Close()
 
-		workerResp, err := http.Get(fmt.Sprintf("%s/get-worker-port/%s/%s/%d",SERVER_IP, userId, ip, clientPort))
-		
-		if err != nil {
-			slog.Debug(err.Error())
-			panic(err)
-		}
+	byteIp, err := io.ReadAll(resp.Body)
 
-		defer workerResp.Body.Close()
+	if err != nil {
+		slog.Debug(err.Error())
+		panic(err)
+	}
 
-		workerPort, err := io.ReadAll(workerResp.Body)
+	ip := string(byteIp)
+	clientPort := conn.LocalAddr().(*net.UDPAddr).Port
 
-		if err != nil {
-			slog.Debug(err.Error())
-			panic(err)
-		}
+	workerResp, err := http.Get(fmt.Sprintf("http://%s:%d/get-worker-port/%s/%s/%d", SERVER_IP, SERVER_LOGIN_PORT, userId, ip, clientPort))
 
-		port, err := strconv.Atoi(string(workerPort))
-		
-		if err != nil {
-			slog.Debug(err.Error())
-			panic(err)
-		}
+	if err != nil {
+		slog.Debug(err.Error())
+		panic(err)
+	}
 
-		a.SetId(userId)
-		a.SetConn(conn)
+	defer workerResp.Body.Close()
 
-		return port
+	workerPort, err := io.ReadAll(workerResp.Body)
+
+	if err != nil {
+		slog.Debug(err.Error())
+		panic(err)
+	}
+
+	port, err := strconv.Atoi(string(workerPort))
+
+	if err != nil {
+		slog.Debug(err.Error())
+		panic(err)
+	}
+
+	a.SetId(userId)
+	a.SetConn(conn)
+
+	return port
 }
 
 func (a *App) StartUpdateMapStatus() {
@@ -158,7 +163,7 @@ func (a *App) StartUpdateMapStatus() {
 			}
 
 			a.SetGameMap(userPositionedGameMap)
-	}
+		}
 	}()
 }
 
@@ -167,14 +172,14 @@ func (a *App) SendStatus(clientStatus ClientStatus) {
 
 	for _, item := range clientStatus.Items {
 		protoItems = append(protoItems, &protodef.Item{
-			Id: item.Id,
-			Name: item.Name,
+			Id:     item.Id,
+			Name:   item.Name,
 			Amount: item.Amount,
 		})
 	}
 
 	status := protodef.Status{
-		Id:     clientStatus.ID,
+		Id: clientStatus.ID,
 		CurrentPosition: &protodef.Position{
 			X: clientStatus.CurrentPosition.X,
 			Y: clientStatus.CurrentPosition.Y,
@@ -190,7 +195,7 @@ func (a *App) SendStatus(clientStatus ClientStatus) {
 		panic(err)
 	}
 
-	serverAddr, err := net.ResolveUDPAddr("udp", fmt.Sprintf("%s:%d", SERVER_IP, SERVER_PORT))
+	serverAddr, err := net.ResolveUDPAddr("udp", fmt.Sprintf("%s:%d", SERVER_IP, serverPort))
 
 	if err != nil {
 		slog.Debug(err.Error())
@@ -211,5 +216,4 @@ func (a *App) SendStatus(clientStatus ClientStatus) {
 		panic(err)
 	}
 
-	
 }

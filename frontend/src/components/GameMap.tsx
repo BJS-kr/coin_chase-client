@@ -3,10 +3,18 @@ import "../css/GameMap.css";
 import { RenderGrid } from "./RenderGrid";
 import { GetId, SendStatus } from "../communicate";
 const GameMap = () => {
-  const gridSize = 100; // Defines the size of the grid
+  const [userId, setUserId] = useState("");
+  const gridSize = 10; // Defines the size of the grid
   const [position, setPosition] = useState({
     x: 0,
     y: 0,
+  });
+
+  GetId().then((id) => {
+    console.log({
+    whatthefuck:id
+    });
+    setUserId(id);
   });
 
   useEffect(() => {
@@ -50,8 +58,9 @@ const GameMap = () => {
   // Generate the grid
 
   useEffect(() => {
+    if (userId === "") return;
     SendStatus({
-      id: GetId(),
+      id: userId,
       currentPosition: position,
       items: [],
     });
