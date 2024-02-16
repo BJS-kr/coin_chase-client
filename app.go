@@ -26,6 +26,7 @@ var userId string
 var conn *net.UDPConn
 var globalGameMap *protodef.UserPositionedGameMap
 
+
 type Item struct {
 	Id     string
 	Name   string
@@ -113,10 +114,10 @@ func (a *App) LogIn(userId string) int {
 		panic(err)
 	}
 
-	ip := string(byteIp)
+	clientIP := string(byteIp)
 	clientPort := conn.LocalAddr().(*net.UDPAddr).Port
 
-	workerResp, err := http.Get(fmt.Sprintf("http://%s:%d/get-worker-port/%s/%s/%d", SERVER_IP, SERVER_LOGIN_PORT, userId, ip, clientPort))
+	workerResp, err := http.Get(fmt.Sprintf("http://%s:%d/get-worker-port/%s/%s/%d", SERVER_IP, SERVER_LOGIN_PORT, userId, clientIP, clientPort))
 
 	if err != nil {
 		slog.Debug(err.Error())
@@ -145,12 +146,12 @@ func (a *App) LogIn(userId string) int {
 	return port
 }
 
+
 func (a *App) StartUpdateMapStatus() {
 	go func() {
 		for {
 			buffer := make([]byte, 1024)
 			amount, _, err := conn.ReadFromUDP(buffer)
-
 			if err != nil {
 				log.Fatal(err.Error())
 			}
@@ -161,7 +162,7 @@ func (a *App) StartUpdateMapStatus() {
 			if desErr != nil {
 				log.Fatal(err.Error())
 			}
-
+			fmt.Println("data received")	
 			a.SetGameMap(userPositionedGameMap)
 		}
 	}()

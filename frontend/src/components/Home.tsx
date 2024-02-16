@@ -1,7 +1,11 @@
 import { useState } from "react";
-import { LogIn, SetServerPort, StartUpdateMapStatus } from "../communicate";
 import { Navigate, useNavigate } from "react-router-dom";
 import logo from "../assets/images/logo-universal.png";
+import {
+  LogIn,
+  SetServerPort,
+  StartUpdateMapStatus,
+} from "../../wailsjs/go/main/App";
 
 export const Home = () => {
   const [loginText, setLoginText] = useState("아이디를 입력해주세요 👇");
@@ -26,7 +30,7 @@ export const Home = () => {
         />
         <button
           className="btn"
-          onClick={async() => {
+          onClick={async () => {
             await SetServerPort(await LogIn(id));
             await StartUpdateMapStatus();
             navigate("/game");

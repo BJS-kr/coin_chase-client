@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import "../css/GameMap.css";
 import { RenderGrid } from "./RenderGrid";
-import { GetId, SendStatus } from "../communicate";
+import { GetGameMap, GetId, SendStatus } from "../../wailsjs/go/main/App";
+
 const GameMap = () => {
   const [userId, setUserId] = useState("");
   const gridSize = 10; // Defines the size of the grid
@@ -11,9 +12,6 @@ const GameMap = () => {
   });
 
   GetId().then((id) => {
-    console.log({
-    whatthefuck:id
-    });
     setUserId(id);
   });
 
@@ -64,6 +62,7 @@ const GameMap = () => {
       currentPosition: position,
       items: [],
     });
+    GetGameMap().then((r) => console.log({ map: r }));
   }, [position]);
 
   return <div className="grid">{RenderGrid(gridSize, position)}</div>;
