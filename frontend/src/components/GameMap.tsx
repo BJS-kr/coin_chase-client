@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
 import "../css/GameMap.css";
 import { RenderGrid } from "./RenderGrid";
-import { GetGameMap, GetId, SendStatus } from "../../wailsjs/go/main/App";
+import { GetId, GetRelatedPositions, SendStatus } from "../../wailsjs/go/main/App";
 
 const GameMap = () => {
   const [userId, setUserId] = useState("");
-  const gridSize = 10; // Defines the size of the grid
+  const gridSize = 20;
   const [position, setPosition] = useState({
     x: 0,
     y: 0,
@@ -62,8 +62,19 @@ const GameMap = () => {
       currentPosition: position,
       items: [],
     });
-    GetGameMap().then((r) => console.log({ map: r }));
-  }, [position]);
+
+    }, [position]);
+
+  useEffect(() => {
+    const getRelatedPositions = async () => {
+      const positions = await GetRelatedPositions();
+      console.log(positions);
+    };
+
+    const intervalId = setInterval(getRelatedPositions, 100);
+
+    return () => clearInterval(intervalId);
+  }, []); // Empty dependency array to run effect only once
 
   return <div className="grid">{RenderGrid(gridSize, position)}</div>;
 };

@@ -24,8 +24,8 @@ const (
 var serverPort int
 var userId string
 var conn *net.UDPConn
-var globalGameMap *protodef.UserPositionedGameMap
-
+var userRelatedPositions *protodef.RelatedPositions
+var receiveStarted bool
 
 type Item struct {
 	Id     string
@@ -69,12 +69,13 @@ func (a *App) SetId(id string) {
 func (a *App) SetConn(udpConn *net.UDPConn) {
 	conn = udpConn
 }
-func (a *App) SetGameMap(gameMap *protodef.UserPositionedGameMap) {
-	globalGameMap = gameMap
+func (a *App) SetRelatedPositions(relatedPositions *protodef.RelatedPositions) {
+	userRelatedPositions = relatedPositions
 }
-func (a *App) GetGameMap() *protodef.UserPositionedGameMap {
-	return globalGameMap
+func (a *App) GetRelatedPositions() *protodef.RelatedPositions {
+	return userRelatedPositions
 }
+
 func (a *App) GetId() string {
 	return userId
 }
@@ -107,17 +108,17 @@ func (a *App) LogIn(userId string) int {
 
 	defer resp.Body.Close()
 
-	byteIp, err := io.ReadAll(resp.Body)
+	_, err = io.ReadAll(resp.Body)
 
 	if err != nil {
 		slog.Debug(err.Error())
 		panic(err)
 	}
 
-	clientIP := string(byteIp)
+	// clientIP := string(byteIp)
 	clientPort := conn.LocalAddr().(*net.UDPAddr).Port
 
-	workerResp, err := http.Get(fmt.Sprintf("http://%s:%d/get-worker-port/%s/%s/%d", SERVER_IP, SERVER_LOGIN_PORT, userId, clientIP, clientPort))
+	workerResp, err := http.Get(fmt.Sprintf("http://%s:%d/get-worker-port/%s/%s/%d", SERVER_IP, SERVER_LOGIN_PORT, userId, "127.0.0.1", clientPort))
 
 	if err != nil {
 		slog.Debug(err.Error())
@@ -146,24 +147,34 @@ func (a *App) LogIn(userId string) int {
 	return port
 }
 
-
 func (a *App) StartUpdateMapStatus() {
+	if receiveStarted {
+		return
+	}
+	receiveStarted = true
 	go func() {
 		for {
 			buffer := make([]byte, 1024)
 			amount, _, err := conn.ReadFromUDP(buffer)
+
 			if err != nil {
 				log.Fatal(err.Error())
 			}
 
-			userPositionedGameMap := &protodef.UserPositionedGameMap{}
-			desErr := proto.Unmarshal(buffer[:amount], userPositionedGameMap)
+			// decompressed, err := snappy.Decode(nil, buffer[:amount])
+
+			if err != nil {
+				slog.Debug(err.Error())
+			}
+
+			relatedPositions := &protodef.RelatedPositions{}
+			desErr := proto.Unmarshal(buffer[:amount], relatedPositions)
 
 			if desErr != nil {
 				log.Fatal(err.Error())
 			}
-			fmt.Println("data received")	
-			a.SetGameMap(userPositionedGameMap)
+
+			a.SetRelatedPositions(relatedPositions)
 		}
 	}()
 }

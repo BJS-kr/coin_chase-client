@@ -4,9 +4,9 @@ import {protodef} from '../models';
 import {main} from '../models';
 import {net} from '../models';
 
-export function GetGameMap():Promise<protodef.UserPositionedGameMap>;
-
 export function GetId():Promise<string>;
+
+export function GetRelatedPositions():Promise<protodef.RelatedPositions>;
 
 export function Greet(arg1:string):Promise<string>;
 
@@ -16,9 +16,9 @@ export function SendStatus(arg1:main.ClientStatus):Promise<void>;
 
 export function SetConn(arg1:net.UDPConn):Promise<void>;
 
-export function SetGameMap(arg1:protodef.UserPositionedGameMap):Promise<void>;
-
 export function SetId(arg1:string):Promise<void>;
+
+export function SetRelatedPositions(arg1:protodef.RelatedPositions):Promise<void>;
 
 export function SetServerPort(arg1:number):Promise<void>;
 
