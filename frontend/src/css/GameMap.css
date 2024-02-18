@@ -13,14 +13,26 @@
   height: 100%;
 }
 
-.cell {
+.fog {
   width: 100%;
   height: 100%;
-  border: 1px solid #ddd;
+  border: 1px solid #0f0505;
 }
 
-.here {
-  background-color: red;
+.occupied {
+  width: 100%;
+  height: 100%;
+  border: 1px solid #e00e31;
+}
+
+.empty {
+  width: 100%;
+  height: 100%;
+  border: 1px solid #926912;
+}
+
+.user {
+  background-color: rgb(21, 255, 0);
   width: 100%;
   height: 100%;
 }
