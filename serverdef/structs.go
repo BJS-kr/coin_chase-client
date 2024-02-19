@@ -15,6 +15,5 @@ type Item struct {
 type Status struct {
 	Id              string
 	CurrentPosition Position
-	Items           []Item
 	SentAt          time.Time
 }

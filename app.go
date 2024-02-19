@@ -10,10 +10,8 @@ import (
 	"net"
 	"net/http"
 	"strconv"
-	"time"
 
 	"google.golang.org/protobuf/proto"
-	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 const (
@@ -39,7 +37,6 @@ type Position struct {
 type ClientStatus struct {
 	ID              string
 	CurrentPosition *Position
-	Items           []*Item
 }
 
 // App struct
@@ -180,15 +177,6 @@ func (a *App) StartUpdateMapStatus() {
 }
 
 func (a *App) SendStatus(clientStatus ClientStatus) {
-	protoItems := make([]*protodef.Item, 0)
-
-	for _, item := range clientStatus.Items {
-		protoItems = append(protoItems, &protodef.Item{
-			Id:     item.Id,
-			Name:   item.Name,
-			Amount: item.Amount,
-		})
-	}
 
 	status := protodef.Status{
 		Id: clientStatus.ID,
@@ -196,8 +184,6 @@ func (a *App) SendStatus(clientStatus ClientStatus) {
 			X: clientStatus.CurrentPosition.X,
 			Y: clientStatus.CurrentPosition.Y,
 		},
-		Items:  protoItems,
-		SentAt: timestamppb.New(time.Now()),
 	}
 
 	data, err := proto.Marshal(&status)

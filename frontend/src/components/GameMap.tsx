@@ -62,7 +62,6 @@ const GameMap = () => {
     SendStatus({
       id: userId,
       currentPosition: position,
-      items: [],
     });
 
     }, [relatedPositions]);
