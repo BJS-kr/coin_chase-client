@@ -17,6 +17,7 @@ export namespace protodef {
 	export class Cell {
 	    occupied?: boolean;
 	    owner?: string;
+	    kind?: number;
 	
 	    static createFrom(source: any = {}) {
 	        return new Cell(source);
@@ -26,6 +27,7 @@ export namespace protodef {
 	        if ('string' === typeof source) source = JSON.parse(source);
 	        this.occupied = source["occupied"];
 	        this.owner = source["owner"];
+	        this.kind = source["kind"];
 	    }
 	}
 	export class RelatedPosition {

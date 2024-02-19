@@ -1,8 +1,12 @@
 import { useEffect, useState } from "react";
 import "../css/GameMap.css";
 import { RenderGrid } from "./RenderGrid";
-import { GetId, GetRelatedPositions, SendStatus } from "../../wailsjs/go/main/App";
-import { protodef } from '../../wailsjs/go/models';
+import {
+  GetId,
+  GetRelatedPositions,
+  SendStatus,
+} from "../../wailsjs/go/main/App";
+import { protodef } from "../../wailsjs/go/models";
 
 const GameMap = () => {
   const [userId, setUserId] = useState("");
@@ -11,7 +15,8 @@ const GameMap = () => {
     x: 0,
     y: 0,
   });
-  const [relatedPositions, setRelatedPositions] = useState<protodef.RelatedPositions>({} as protodef.RelatedPositions);
+  const [relatedPositions, setRelatedPositions] =
+    useState<protodef.RelatedPositions>({} as protodef.RelatedPositions);
 
   GetId().then((id) => {
     setUserId(id);
@@ -64,12 +69,12 @@ const GameMap = () => {
       currentPosition: position,
       items: [],
     });
-
-    }, [relatedPositions]);
+  }, [relatedPositions]);
 
   useEffect(() => {
     const getRelatedPositions = async () => {
       const relatedPositions = await GetRelatedPositions();
+
       setRelatedPositions(relatedPositions);
     };
 
