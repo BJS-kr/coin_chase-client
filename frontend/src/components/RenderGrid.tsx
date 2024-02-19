@@ -1,32 +1,44 @@
-import { protodef } from '../../wailsjs/go/models';
+import { protodef } from "../../wailsjs/go/models";
 
 export const RenderGrid = (
   gridSize: number,
-  relatedPositions: protodef.RelatedPositions 
+  relatedPositions: protodef.RelatedPositions
 ) => {
-
   const rows = [];
   for (let y = 0; y < gridSize; y++) {
     const cells = [];
     for (let x = 0; x < gridSize; x++) {
-      const isHere = relatedPositions?.user_position?.x === x && relatedPositions?.user_position?.y  === y;
+      let added = false;
+      const isHere =
+        (relatedPositions?.user_position?.x ?? 0) === x &&
+        (relatedPositions?.user_position?.y ?? 0) === y;
       for (const relatedPosition of relatedPositions?.related_positions || []) {
-        if (relatedPosition.position?.x === x && relatedPosition.position.y === y){
+        if (
+          (relatedPosition.position?.x ?? 0) === x &&
+          (relatedPosition.position?.y ?? 0) === y
+        ) {
+          added = true;
           if (relatedPosition.cell.occupied) {
-            cells.push(
-              <div key={`${x}-${y}`} className="occupied"></div>
-            );
+            console.log(relatedPosition.cell.kind);
+            const kind =
+              relatedPosition.cell.kind === 2
+                ? "coin"
+                : relatedPosition.cell.kind === 1
+                ? "otherUser"
+                : "unknown";
+
+            if (kind === "unknown")
+              throw new Error(`kind unknown: ${relatedPosition.cell.kind}`);
+            cells.push(<div key={`${x}-${y}`} className={kind}></div>);
           } else {
-            cells.push(
-              <div key={`${x}-${y}`} className="empty"></div>
-            );
+            cells.push(<div key={`${x}-${y}`} className="ground"></div>);
           }
-        } else {
-          cells.push(
-            <div key={`${x}-${y}`} className={isHere ? "user" : "fog"}></div>
-          );
         }
-      } 
+      }
+      !added &&
+        cells.push(
+          <div key={`${x}-${y}`} className={isHere ? "self" : "fog"}></div>
+        );
     }
 
     rows.push(
