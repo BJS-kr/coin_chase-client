@@ -11,11 +11,12 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/golang/snappy"
 	"google.golang.org/protobuf/proto"
 )
 
 const (
-	SERVER_IP         string = "127.0.0.1"
+	SERVER_IP         string = "192.168.1.186"
 	SERVER_LOGIN_PORT int    = 8888
 )
 
@@ -96,26 +97,9 @@ func (a *App) LogIn(userId string) int {
 		panic(err)
 	}
 
-	resp, err := http.Get("https://ipinfo.io/ip")
-
-	if err != nil {
-		slog.Debug(err.Error())
-		panic(err)
-	}
-
-	defer resp.Body.Close()
-
-	_, err = io.ReadAll(resp.Body)
-
-	if err != nil {
-		slog.Debug(err.Error())
-		panic(err)
-	}
-
-	// clientIP := string(byteIp)
 	clientPort := conn.LocalAddr().(*net.UDPAddr).Port
 
-	workerResp, err := http.Get(fmt.Sprintf("http://%s:%d/get-worker-port/%s/%s/%d", SERVER_IP, SERVER_LOGIN_PORT, userId, "127.0.0.1", clientPort))
+	workerResp, err := http.Get(fmt.Sprintf("http://%s:%d/get-worker-port/%s/%d", SERVER_IP, SERVER_LOGIN_PORT, userId, clientPort))
 
 	if err != nil {
 		slog.Debug(err.Error())
@@ -157,15 +141,15 @@ func (a *App) StartUpdateMapStatus() {
 			if err != nil {
 				log.Fatal(err.Error())
 			}
-
-			// decompressed, err := snappy.Decode(nil, buffer[:amount])
+			// packet을 576bytes이하로 유지하기 위해 snappy를 씁니다.
+			decompressed, err := snappy.Decode(nil, buffer[:amount])
 
 			if err != nil {
 				slog.Debug(err.Error())
 			}
 
 			relatedPositions := &protodef.RelatedPositions{}
-			desErr := proto.Unmarshal(buffer[:amount], relatedPositions)
+			desErr := proto.Unmarshal(decompressed, relatedPositions)
 
 			if desErr != nil {
 				log.Fatal(err.Error())
@@ -213,5 +197,4 @@ func (a *App) SendStatus(clientStatus ClientStatus) {
 		slog.Debug(err.Error())
 		panic(err)
 	}
-
 }

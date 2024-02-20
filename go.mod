@@ -5,6 +5,7 @@ go 1.21
 toolchain go1.21.5
 
 require (
+	github.com/golang/snappy v0.0.4
 	github.com/wailsapp/wails/v2 v2.7.1
 	google.golang.org/protobuf v1.32.0
 )

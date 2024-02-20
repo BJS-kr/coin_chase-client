@@ -1,10 +1,18 @@
 import { protodef } from "../../wailsjs/go/models";
+import { ScoreboardOverlay } from "./Scoreboard";
 
-export const RenderGrid = (
-  gridSize: number,
-  relatedPositions: protodef.RelatedPositions
-) => {
+export const RenderGrid = ({
+  gridSize,
+  relatedPositions,
+  userId,
+}: {
+  gridSize: number;
+  relatedPositions: protodef.RelatedPositions;
+  userId: string;
+}) => {
   const rows = [];
+  const scoreboard = relatedPositions?.scoreboard ?? {};
+
   for (let y = 0; y < gridSize; y++) {
     const cells = [];
     for (let x = 0; x < gridSize; x++) {
@@ -19,12 +27,14 @@ export const RenderGrid = (
         ) {
           added = true;
           if (relatedPosition.cell.occupied) {
-            console.log(relatedPosition.cell.kind);
             const kind =
-              relatedPosition.cell.kind === 2
-                ? "coin"
-                : relatedPosition.cell.kind === 1
+              relatedPosition.cell.kind === 1
                 ? "otherUser"
+                : relatedPosition.cell.kind === 2
+                ? "coin"
+                : relatedPosition.cell.kind === 3 ||
+                  relatedPosition.cell.kind === 4
+                ? "item"
                 : "unknown";
 
             if (kind === "unknown")
@@ -48,5 +58,12 @@ export const RenderGrid = (
     );
   }
 
-  return rows;
+  return (
+    <>
+      {rows}
+      <ScoreboardOverlay scoreboard={scoreboard} />
+    </>
+  );
 };
+
+export default RenderGrid;

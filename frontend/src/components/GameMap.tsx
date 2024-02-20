@@ -82,7 +82,15 @@ const GameMap = () => {
     return () => clearInterval(intervalId);
   }, []);
 
-  return <div className="grid">{RenderGrid(gridSize, relatedPositions)}</div>;
+  return (
+    <div className="grid">
+      <RenderGrid
+        gridSize={gridSize}
+        relatedPositions={relatedPositions}
+        userId={userId}
+      />
+    </div>
+  );
 };
 
 export default GameMap;

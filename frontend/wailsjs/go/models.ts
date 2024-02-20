@@ -66,6 +66,7 @@ export namespace protodef {
 	export class RelatedPositions {
 	    related_positions?: RelatedPosition[];
 	    user_position?: Position;
+	    scoreboard?: {[key: string]: number};
 	
 	    static createFrom(source: any = {}) {
 	        return new RelatedPositions(source);
@@ -75,6 +76,7 @@ export namespace protodef {
 	        if ('string' === typeof source) source = JSON.parse(source);
 	        this.related_positions = this.convertValues(source["related_positions"], RelatedPosition);
 	        this.user_position = this.convertValues(source["user_position"], Position);
+	        this.scoreboard = source["scoreboard"];
 	    }
 	
 		convertValues(a: any, classs: any, asMap: boolean = false): any {
