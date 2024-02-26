@@ -1,19 +1,19 @@
-# README
+# Coin chase
 
-## About
+이 게임 클라이언트는 Coin chase게임을 위한 desktop app이며, JS와 Go로 구성되는 wails framework를 사용해 작성되었습니다.
+멀티 플레이가 가능한 클라이언트이며, http를 통해 로그인하고 게임 데이터는 UDP로 송수신 합니다.
 
-This is the official Wails React-TS template.
+## 게임 규칙
 
-You can configure the project by editing `wails.json`. More information about the project settings can be found
-here: https://wails.io/docs/reference/project-config
+1. 로그인 한 유저들은 한 맵에 배치 됩니다(각 유저는 로그인시 사용한 아이디로 구분됩니다).
+2. 유저들의 시야는 2(게임상 그리드)로 제한됩니다. 그래서 자신이 획득해야 하는 자원이 현재 맵에 어디 있는지 알 수 없습니다. 그리드의 총 크기는 20 x 20입니다.
+3. 동전들은 최소 1개 최대 10개가 생성됩니다(대부분의 경우 10개 가까이 생성됩니다).
+4. 동전은 0.5초마다 랜덤위치로 도망갑니다. 유저의 위치로는 도망가지 않습니다(스스로 잡아먹히지 않습니다).
+5. 유저가 동전을 따라잡아 먹으면 동전이 사라지고 1점이 그 유저에게 쌓입니다.
+6. 아이템은 랜덤박스입니다. 시야가 두 배가 되거나, 절반이 됩니다. 아이템은 항상 두 개가 생성됩니다.
+7. 동전과 아이템은 모두 소진시 재생성 됩니다.
+8. 유저의 점수는 좌상단 스코어보드에 표시됩니다.
 
-## Live Development
+## 실행
 
-To run in live development mode, run `wails dev` in the project directory. This will run a Vite development
-server that will provide very fast hot reload of your frontend changes. If you want to develop in a browser
-and have access to your Go methods, there is also a dev server that runs on http://localhost:34115. Connect
-to this in your browser, and you can call your Go code from devtools.
-
-## Building
-
-To build a redistributable, production mode package, use `wails build`.
+wails를 설치한 후 wails build를 실행 후, 컴파일 된 바이너리를 실행하시면 됩니다. 혹은 wails dev로 실행하시면 됩니다.
