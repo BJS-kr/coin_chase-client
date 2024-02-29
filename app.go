@@ -16,7 +16,7 @@ import (
 )
 
 const (
-	SERVER_IP         string = "192.168.1.186"
+	SERVER_IP         string = "127.0.0.1"
 	SERVER_LOGIN_PORT int    = 8888
 )
 
