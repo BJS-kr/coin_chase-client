@@ -22,12 +22,14 @@
   width: 100%;
   height: 100%;
   background: url("../assets/images/otherUser.png") center/cover no-repeat;
+  background-color: #5e4101;
 }
 
 .coin {
   width: 100%;
   height: 100%;
   background: url("../assets/images/coin.png") center/cover no-repeat;
+  background-color: #5e4101;
 }
 
 .ground {
@@ -40,12 +42,14 @@
   background: url("../assets/images/self.png") center/cover no-repeat;
   width: 100%;
   height: 100%;
+  background-color: #5e4101;
 }
 
 .item {
   background: url("../assets/images/item.png") center/cover no-repeat;
   width: 100%;
   height: 100%;
+  background-color: #5e4101;
 }
 
 .scoreboard-overlay {
