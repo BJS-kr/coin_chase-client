@@ -22,10 +22,6 @@ export function SendStatus(arg1) {
   return window['go']['main']['App']['SendStatus'](arg1);
 }
 
-export function SetConn(arg1) {
-  return window['go']['main']['App']['SetConn'](arg1);
-}
-
 export function SetId(arg1) {
   return window['go']['main']['App']['SetId'](arg1);
 }

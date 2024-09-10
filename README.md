@@ -1,7 +1,7 @@
 # Coin chase
 
 이 게임 클라이언트는 Coin chase게임을 위한 desktop app이며, JS와 Go로 구성되는 wails framework를 사용해 작성되었습니다.
-멀티 플레이가 가능한 클라이언트이며, http를 통해 로그인하고 게임 데이터는 UDP로 송수신 합니다.
+멀티 플레이가 가능한 클라이언트이며, http를 통해 로그인하고 게임 데이터는 TCP로 송수신 합니다.
 
 ## 게임 규칙
 

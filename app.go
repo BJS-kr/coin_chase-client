@@ -1,8 +1,10 @@
 package main
 
 import (
+	"bytes"
 	"changeme/protodef"
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -22,7 +24,8 @@ const (
 
 var serverPort int
 var userId string
-var conn *net.UDPConn
+var listener *net.TCPListener
+var conn *net.TCPConn
 var userRelatedPositions *protodef.RelatedPositions
 var receiveStarted bool
 
@@ -64,9 +67,7 @@ func (a *App) Greet(name string) string {
 func (a *App) SetId(id string) {
 	userId = id
 }
-func (a *App) SetConn(udpConn *net.UDPConn) {
-	conn = udpConn
-}
+
 func (a *App) SetRelatedPositions(relatedPositions *protodef.RelatedPositions) {
 	userRelatedPositions = relatedPositions
 }
@@ -83,21 +84,21 @@ func (a *App) SetServerPort(port int) {
 
 func (a *App) LogIn(userId string) int {
 	// 아무 빈 포트에 할당한다.
-	addr, err := net.ResolveUDPAddr("udp", ":0")
+	addr, err := net.ResolveTCPAddr("tcp", ":0")
 
 	if err != nil {
 		slog.Debug(err.Error())
 		panic(err)
 	}
 
-	conn, err := net.ListenUDP("udp", addr)
+	listener, err = net.ListenTCP("tcp", addr)
 
 	if err != nil {
 		slog.Debug(err.Error())
 		panic(err)
 	}
 
-	clientPort := conn.LocalAddr().(*net.UDPAddr).Port
+	clientPort := listener.Addr().(*net.TCPAddr).Port
 
 	workerResp, err := http.Get(fmt.Sprintf("http://%s:%d/get-worker-port/%s/%d", SERVER_IP, SERVER_LOGIN_PORT, userId, clientPort))
 
@@ -122,8 +123,21 @@ func (a *App) LogIn(userId string) int {
 		panic(err)
 	}
 
+	serverAddr, err := net.ResolveTCPAddr("tcp", fmt.Sprintf("%s:%d", SERVER_IP, port))
+
+	if err != nil {
+		slog.Debug(err.Error())
+		panic(err)
+	}
+
+	conn, err = net.DialTCP("tcp", nil, serverAddr)
+
+	if err != nil {
+		slog.Debug(err.Error())
+		panic(err)
+	}
+
 	a.SetId(userId)
-	a.SetConn(conn)
 
 	return port
 }
@@ -133,29 +147,55 @@ func (a *App) StartUpdateMapStatus() {
 		return
 	}
 	receiveStarted = true
+
 	go func() {
+		conn, err := listener.AcceptTCP()
+
+		if err != nil {
+			log.Fatal("failed to accept tcp")
+		}
+
+		buffer := make([]byte, 4096)
+		queueBuffer := bytes.NewBuffer(nil)
+
 		for {
-			buffer := make([]byte, 1024)
-			amount, _, err := conn.ReadFromUDP(buffer)
+			amount, err := conn.Read(buffer)
 
 			if err != nil {
-				log.Fatal(err.Error())
-			}
-			// packet을 576bytes이하로 유지하기 위해 snappy를 씁니다.
-			decompressed, err := snappy.Decode(nil, buffer[:amount])
-
-			if err != nil {
-				slog.Debug(err.Error())
+				if errors.Is(err, io.EOF) {
+					log.Fatal(err.Error())
+				}
+				continue
 			}
 
-			relatedPositions := &protodef.RelatedPositions{}
-			desErr := proto.Unmarshal(decompressed, relatedPositions)
+			queueBuffer.Write(buffer[:amount])
 
-			if desErr != nil {
-				log.Fatal(err.Error())
+			for {
+				data, err := queueBuffer.ReadBytes('$')
+
+				if err != nil {
+					if errors.Is(err, io.EOF) {
+						queueBuffer.Write(data)
+						break
+					} else {
+						log.Fatal("ReadBytes returned error other than EOF(unexpected)", err.Error())
+					}
+				}
+
+				decompressed, err := snappy.Decode(nil, buffer[:amount])
+
+				if err != nil {
+					slog.Debug(err.Error())
+				}
+
+				relatedPositions := &protodef.RelatedPositions{}
+
+				if err := proto.Unmarshal(decompressed[:len(decompressed)-1], relatedPositions); err != nil {
+					log.Fatal("TCP unmarshal failed\n" + err.Error())
+				}
+
+				a.SetRelatedPositions(relatedPositions)
 			}
-
-			a.SetRelatedPositions(relatedPositions)
 		}
 	}()
 }
@@ -177,23 +217,12 @@ func (a *App) SendStatus(clientStatus ClientStatus) {
 		panic(err)
 	}
 
-	serverAddr, err := net.ResolveUDPAddr("udp", fmt.Sprintf("%s:%d", SERVER_IP, serverPort))
+	data = append(data, '$')
+
+	_, err = conn.Write(data)
 
 	if err != nil {
-		slog.Debug(err.Error())
-		panic(err)
-	}
-
-	server, err := net.DialUDP("udp", nil, serverAddr)
-
-	if err != nil {
-		slog.Debug(err.Error())
-		panic(err)
-	}
-
-	_, err = server.Write(data)
-
-	if err != nil {
+		println("here?")
 		slog.Debug(err.Error())
 		panic(err)
 	}
