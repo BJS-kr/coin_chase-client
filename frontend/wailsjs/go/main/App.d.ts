@@ -11,6 +11,8 @@ export function Greet(arg1:string):Promise<string>;
 
 export function LogIn(arg1:string):Promise<number>;
 
+export function SendAttack(arg1:main.ClientAttack):Promise<void>;
+
 export function SendStatus(arg1:main.ClientStatus):Promise<void>;
 
 export function SetId(arg1:string):Promise<void>;

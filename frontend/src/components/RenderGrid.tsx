@@ -20,35 +20,41 @@ export const RenderGrid = ({
       const isHere =
         (relatedPositions?.user_position?.x ?? 0) === x &&
         (relatedPositions?.user_position?.y ?? 0) === y;
+
       for (const relatedPosition of relatedPositions?.related_positions || []) {
+     
         if (
           (relatedPosition.position?.x ?? 0) === x &&
           (relatedPosition.position?.y ?? 0) === y
         ) {
           added = true;
+          
           if (relatedPosition.cell.occupied) {
             const kind =
-              relatedPosition.cell.kind === 1
+              relatedPosition.cell.kind === 10_001
                 ? "otherUser"
-                : relatedPosition.cell.kind === 2
+                : relatedPosition.cell.kind === 10_002
                 ? "coin"
-                : relatedPosition.cell.kind === 3 ||
-                  relatedPosition.cell.kind === 4
+                : relatedPosition.cell.kind === 10_003 ||
+                  relatedPosition.cell.kind === 10_004
                 ? "item"
                 : "unknown";
 
             if (kind === "unknown")
-              throw new Error(`kind unknown: ${relatedPosition.cell.kind}`);
+              console.log(relatedPosition.cell.kind);
+              // throw new Error(`kind unknown: ${relatedPosition.cell}`);
             cells.push(<div key={`${x}-${y}`} className={kind}></div>);
           } else {
             cells.push(<div key={`${x}-${y}`} className="ground"></div>);
           }
         }
       }
-      !added &&
+
+      if (!added) {
         cells.push(
           <div key={`${x}-${y}`} className={isHere ? "self" : "fog"}></div>
         );
+      }
     }
 
     rows.push(

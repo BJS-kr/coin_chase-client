@@ -18,6 +18,10 @@ export function LogIn(arg1) {
   return window['go']['main']['App']['LogIn'](arg1);
 }
 
+export function SendAttack(arg1) {
+  return window['go']['main']['App']['SendAttack'](arg1);
+}
+
 export function SendStatus(arg1) {
   return window['go']['main']['App']['SendStatus'](arg1);
 }

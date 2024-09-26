@@ -1,5 +1,17 @@
 export namespace main {
 	
+	export class ClientAttack {
+	
+	
+	    static createFrom(source: any = {}) {
+	        return new ClientAttack(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	
+	    }
+	}
 	export class ClientStatus {
 	
 	

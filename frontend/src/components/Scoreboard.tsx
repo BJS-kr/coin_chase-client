@@ -4,15 +4,18 @@ export const ScoreboardOverlay = ({
   scoreboard: { [K in string]: number };
 }) => {
   return (
-    <div className="scoreboard-overlay">
+    // align strings left most except h2
+    <div className="scoreboard-overlay" 
+    style={{textAlign: "left"}}>
       <h2>점수표</h2>
-      <ul>
-        {Object.entries(scoreboard).map(([player, score]) => (
-          <li key={player}>
-            {player}: {score}
-          </li>
+        {Object.entries(scoreboard)
+          .sort((a, b) => b[1] - a[1])
+          .map(([player, score], index) => (
+          <>
+              {index + 1}등 {player} {score}점
+              <br />
+          </>
         ))}
-      </ul>
     </div>
   );
 };

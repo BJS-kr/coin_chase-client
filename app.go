@@ -22,6 +22,11 @@ const (
 	SERVER_LOGIN_PORT int    = 8888
 )
 
+var (
+	PACKET_TYPE_STATUS = []byte{0}
+	PACKET_TYPE_ATTACK = []byte{1}
+)
+
 var serverPort int
 var userId string
 var listener *net.TCPListener
@@ -41,6 +46,12 @@ type Position struct {
 type ClientStatus struct {
 	ID              string
 	CurrentPosition *Position
+}
+
+type ClientAttack struct {
+	UserId         string
+	UserPosition   *Position
+	AttackPosition *Position
 }
 
 // App struct
@@ -147,7 +158,6 @@ func (a *App) StartUpdateMapStatus() {
 		return
 	}
 	receiveStarted = true
-
 	go func() {
 		conn, err := listener.AcceptTCP()
 
@@ -157,10 +167,8 @@ func (a *App) StartUpdateMapStatus() {
 
 		buffer := make([]byte, 4096)
 		queueBuffer := bytes.NewBuffer(nil)
-
 		for {
 			amount, err := conn.Read(buffer)
-
 			if err != nil {
 				if errors.Is(err, io.EOF) {
 					log.Fatal(err.Error())
@@ -190,8 +198,10 @@ func (a *App) StartUpdateMapStatus() {
 
 				relatedPositions := &protodef.RelatedPositions{}
 
-				if err := proto.Unmarshal(decompressed[:len(decompressed)-1], relatedPositions); err != nil {
-					log.Fatal("TCP unmarshal failed\n" + err.Error())
+				if l := len(decompressed); l > 0 {
+					if err := proto.Unmarshal(decompressed[:l-1], relatedPositions); err != nil {
+						log.Fatal("TCP unmarshal failed\n" + err.Error())
+					}
 				}
 
 				a.SetRelatedPositions(relatedPositions)
@@ -201,7 +211,6 @@ func (a *App) StartUpdateMapStatus() {
 }
 
 func (a *App) SendStatus(clientStatus ClientStatus) {
-
 	status := protodef.Status{
 		Id: clientStatus.ID,
 		CurrentPosition: &protodef.Position{
@@ -217,12 +226,41 @@ func (a *App) SendStatus(clientStatus ClientStatus) {
 		panic(err)
 	}
 
-	data = append(data, '$')
+	sendPacket(PACKET_TYPE_STATUS, data)
+}
 
-	_, err = conn.Write(data)
+func (a *App) SendAttack(clientAttack ClientAttack) {
+	attack := protodef.Attack{
+		UserId: clientAttack.UserId,
+		UserPosition: &protodef.Position{
+			X: clientAttack.UserPosition.X,
+			Y: clientAttack.UserPosition.Y,
+		},
+		AttackPosition: &protodef.Position{
+			X: clientAttack.AttackPosition.X,
+			Y: clientAttack.AttackPosition.Y,
+		},
+	}
+
+	data, err := proto.Marshal(&attack)
 
 	if err != nil {
-		println("here?")
+		slog.Debug(err.Error())
+		panic(err)
+	}
+
+	sendPacket(PACKET_TYPE_ATTACK, data)
+}
+
+func sendPacket(packetType []byte, data []byte) {
+	data = append(data, '$')
+	_, err := conn.Write(packetType)
+	if err != nil {
+		slog.Debug(err.Error())
+		panic(err)
+	}
+	_, err = conn.Write(data)
+	if err != nil {
 		slog.Debug(err.Error())
 		panic(err)
 	}
